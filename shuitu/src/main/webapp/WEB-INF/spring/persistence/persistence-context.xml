@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+	<!-- Hikari DataSource -->
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource"
+		destroy-method="close">
+		<property name="maximumPoolSize" value="${hikari.maximumPoolSize}"/>
+		<property name="minimumIdle" value="${hikari.minimumIdle}"/>
+		<property name="connectionTestQuery" value="${hikari.connectionTestQuery}"/>
+		<property name="dataSourceProperties">
+			<util:properties location="classpath:config/dataSource.properties" />
+		</property>
+		<!--<property name="dataSourceClassName" value="${jdbc.dataSourceClassName}" />-->
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+	
+	<!-- Mybaits Config -->
+	<bean id="mybatisConfiguration" class="org.apache.ibatis.session.Configuration">
+		<property name="useGeneratedKeys" value="true"/>
+		<property name="useColumnLabel" value="true"/>
+		<property name="mapUnderscoreToCamelCase" value="true"/>
+	</bean>
+	
+	<!-- sessionFactory 将spring和mybatis整合 --> 
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+        <property name="dataSource" ref="dataSource" />  
+        <!-- config location of mapping.xml -->  
+        <property name="mapperLocations" value="classpath:com/intelligentler/shuitu/mapping/*.xml"/>
+        <property name="typeAliasesPackage" value="com.intelligentler.shuitu.entity" />
+        <property name="configuration" ref="mybatisConfiguration"/>
+    </bean>
+    
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory"/>
+	</bean>
+    
+    <!-- Config DAO path -->  
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">  
+        <property name="basePackage" value="com.intelligentler.shuitu.dao" />  
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>  
+    </bean>
+    
+    <!-- Config TransactionManager -->
+	<bean
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		id="transactionManager">
+		<!-- 注入数据库连接池 -->
+		<property name="dataSource">
+			<ref bean="dataSource"/>
+		</property>
+	</bean>
+	
+	<!-- Enable spring tx annotation config -->	
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	<!-- Tx Config -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED"/>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="add*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="remove*" propagation="REQUIRED"/>
+			<tx:method name="accept*" propagation="REQUIRED"/>
+			<tx:method name="reject*" propagation="REQUIRED"/>
+			<tx:method name="execute*" propagation="REQUIRED"/>
+			<tx:method name="del*" propagation="REQUIRED"/>
+			<tx:method name="recover*" propagation="REQUIRED"/>
+			<tx:method name="sync*" propagation="REQUIRED"/>
+			<tx:method name="*" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<aop:config>
+		<aop:pointcut id="txPointcut"
+					  expression="execution(public * com.intelligentler.shuitu.service.*.*(..))"/>
+		<aop:advisor pointcut-ref="txPointcut" advice-ref="txAdvice"/>
+	</aop:config>
+</beans>

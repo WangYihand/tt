@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.intelligentler.shuitu.dao.UserMapper">
+	<resultMap type="com.intelligentler.shuitu.entity.TblUser" id="List">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="user_name" jdbcType="VARCHAR" property="user_name" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="sex" jdbcType="VARCHAR" property="sex" />
+		<result column="birth" jdbcType="TIMESTAMP" property="birth" />
+		<result column="tele" jdbcType="VARCHAR" property="tele" />
+	</resultMap>
+	<insert id="insertUser" parameterType="com.intelligentler.shuitu.entity.TblUser" keyProperty="id">
+	    insert into tbl_user (id, user_name, name, 
+	      sex, birth, tele)
+	    values (#{id,jdbcType=INTEGER}, #{user_name,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+	      #{sex,jdbcType=VARCHAR}, #{birth,jdbcType=TIMESTAMP}, #{tele,jdbcType=VARCHAR})
+  	</insert>
+	<select id="getAllUser" resultMap="List">
+		select * from tbl_user
+	</select>
+</mapper>
